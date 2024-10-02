@@ -9,7 +9,6 @@ jobs:
   release:
     name: Build and Release
     runs-on: ubuntu-latest
-
     steps:
       # Checkout the code
       - name: Checkout code
@@ -24,6 +23,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v4
         with:
           version: latest # or specify a version like 'v1.19.2'
-          args: release --clean --snapshot # Snapshot just so I don't have to mess about with tags
+          args: release --clean # Providing args to run the release command
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Required for GoReleaser to create a release
