@@ -1,59 +1,29 @@
-name: Docker
+name: Release
 
 on:
   push:
     branches:
-      - 'master'
-      - 'dev'
-    tags:
-      - 'v*.*.*'
-  pull_request:
-    branches:
-      - 'master'
-      - 'dev'
+      - master
+
 jobs:
-  build:
+  release:
+    name: Build and Release
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
-      id-token: write
 
     steps:
-      - name: Checkout repository
+      # Checkout the code
+      - name: Checkout code
         uses: actions/checkout@v3
-      - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Log into registry ghcr.io
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v2
+      # Set up Go
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v4
+          go-version: '1.23' # Specify the Go version you are using
+      # Install GoReleaser and run it
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v4
         with:
-          images: ghcr.io/kn100/garbage
-          tags: |
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
-      - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          platforms: linux/amd64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          version: latest # or specify a version like 'v1.19.2'
+          args: release --clean --snapshot # Snapshot just so I don't have to mess about with tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Required for GoReleaser to create a release
