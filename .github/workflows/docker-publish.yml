@@ -5,6 +5,9 @@ on:
     tags:
       - "*"
 
+permissions:
+  contents: write # Grant permissions to create releases
+  
 jobs:
   release:
     name: Build and Release
